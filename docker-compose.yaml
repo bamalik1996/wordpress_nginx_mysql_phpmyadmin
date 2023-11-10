@@ -1,0 +1,43 @@
+version: "1.0" 
+services:
+  web:
+    build: .
+    ports:
+      - "2021:80"
+    volumes:
+      - .:/var/www/html
+      - wordpress_volumn:/var/www/wp-content/uploads
+    #command: sh -c "chown -R www-data:www-data /var/www/html && nginx -g 'daemon off;'"  # Replace your_user and your_group with your desired user and group
+    networks:
+      - app-network
+  db:
+    image: mysql
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - wordpress_volumn:/var/lib/mysql
+    networks:
+      - app-network
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 2022:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - app-network
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+volumes:
+  wordpress_volumn: {}
+
+networks: 
+  app-network:
+    driver: bridge
